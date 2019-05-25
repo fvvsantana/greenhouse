@@ -11,6 +11,8 @@ class Sensor:
                 raise AttributeException("ERROR: Invalid serial number")
         else:
             raise AttributeException("ERROR: Invalid type number")
+        
+        self.handshake()
     
     def __handshake(self):
         new_port = 0;
