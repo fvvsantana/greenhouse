@@ -1,6 +1,24 @@
 import numpy as np
 import socket
 
+"""
+Véi, foca no código
+
+
+        .---.
+       /o   o\
+    __(=  "  =)__
+     //\'-=-'/\\
+        )   (_
+       /      `"=-._
+      /       \     ``"=.
+     /  /   \  \         `=..--.
+ ___/  /     \  \___      _,  , `\
+`-----' `""""`'-----``"""`  \  \_/
+                             `-`
+
+""""""
+
 class Actuator:
     def _init_ (self, type, serialNumber):
         self.type = type
