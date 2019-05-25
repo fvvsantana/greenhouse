@@ -12,12 +12,11 @@ class Sensor:
         else:
             raise AttributeException("ERROR: Invalid type number")
         
-        self.handshake()
+        self.__handshake()
     
     def __handshake(self):
         new_port = 0;
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as soc:
-            soc.bind(('127.0.255.1',1337))
             soc.connect(('127.0.255.1',1337))
             soc.send(bytes([self.serial]))
             aux_port = soc.recv(2)
@@ -27,7 +26,6 @@ class Sensor:
                 new_port = aux_port[0]<<8 | aux_port[1]
             
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.bind(('127.0.255.1',new_port))
         self.sock.connect(('127.0.255.1',new_port))
     
     def send(self, value):
