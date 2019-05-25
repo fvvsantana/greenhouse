@@ -28,7 +28,9 @@ class Sensor:
         self.sock.bind(('127.0.255.1',new_port))
         self.sock.connect(('127.0.255.1',new_port))
     
-    def send(value):
+    def send(self, value):
         bytes_to_send = struct.pack("f", value)
         self.send(bytes_to_send)
         
+    def close(self):
+        self.sock.close()
