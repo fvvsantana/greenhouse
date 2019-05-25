@@ -1,4 +1,5 @@
 import socket
+import struct
 
 class Sensor:
     def __init__(self, type, serialNumber):
@@ -16,7 +17,7 @@ class Sensor:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as soc:
             soc.bind(('127.0.255.1',1337))
             soc.connect(('127.0.255.1',1337))
-            soc.send(bytes([self.serialNumber]))
+            soc.send(bytes([self.serial]))
             aux_port = soc.recv(2)
             if len(aux_port) != 2:
                 raise AttributeException("ERROR: Connection error")
@@ -28,8 +29,6 @@ class Sensor:
         self.sock.connect(('127.0.255.1',new_port))
     
     def send(value):
-        send_value = bytes(5)
-        bytes[0] = 
-
-    def sendLoop(value):
-
+        bytes_to_send = struct.pack("f", value)
+        self.send(bytes_to_send)
+        
