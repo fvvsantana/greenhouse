@@ -19,7 +19,7 @@ class HUB:
         self.__handshake_socket.close()
 
     def gen_new_port(self):
-        #O valor aleatorio esta no intervalo [0,255] para ser masi facil para converter e mandar a porta pelo socket
+        #O valor aleatorio esta no intervalo [0,255] para ser mais facil para converter e mandar a porta pelo socket
         port = random.randint(5,255)
         while(port in self.__used_ports):
             port = random.randint(5,255)
@@ -64,7 +64,7 @@ class HUB:
             if(len(ack) == 0 or ack == b'\x00'):
                 self.close_socket(ID)
             else:
-                self.__connections[ID][0].accept()
+                self.__connection[ID][0], _ = self.__connections[ID][0].accept()
 
 
 
