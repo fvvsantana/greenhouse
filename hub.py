@@ -78,10 +78,9 @@ class HUB:
             conn.send(data_send)
             ack = conn.recv(1)
             if(len(ack) == 0 or ack == b'\x00'):
-                print('fodeo')
                 self.close_socket(ID)
             else:
-                self.__connection[ID][0], _ = self.__connections[ID][0].accept()
+                self.__connections[ID][0], _ = self.__connections[ID][0].accept()
                 #inicia uma thread, que vai receber ou enviar os dados
                 if(is_sensor(ID)):
                     self.get_data_from_sensor(ID)
@@ -89,18 +88,16 @@ class HUB:
                 elif(is_client(ID)):
                     self.interact_with_client(ID)
                 elif(is_actuator(ID)):
-                    self.send_data_to_sensor(ID)
                     self.__current_state[ID] = [b'\x00',b'\x00']
+                    self.send_data_to_sensor(ID)
     
     def get_data_from_sensor(self, ID):
         while(1):
             data = self.__connections[ID][0].recv(4) #4 bytes que serao interpretados como um float
             if(len(data)):
                 data = struct.unpack('f',data)
-                print(data)
                 self.__last_values[ID] = data
             else:
-                print("terminou")
                 break
 
     def interact_with_client(self,ID):
@@ -112,10 +109,10 @@ class HUB:
         time_til_heartbeat = datetime.datetime.now() + datetime.timedelta(seconds = self.__timeout)
         while(1):
             #check if a new command should be issued
-            if(self.__current_state[ID][0] == self.__current_state[ID][1]):
+            if(self.__current_state[ID][0] != self.__current_state[ID][1]):
                 self.__current_state[ID][0] = self.__current_state[ID][1]
                 self.__connections[ID][0].send(self.__current_state[ID][0])
-                data = self.__current_state[ID][0].recv(1)
+                data = self.__connections[ID][0].recv(1)
                 if(len(data) == 0):
                     #o sensor foi desconectado, precisa avisar o cliente
                     self.close_socket(ID)
@@ -127,8 +124,9 @@ class HUB:
                     time_til_heartbeat = datetime.datetime.now() + datetime.timedelta(seconds = self.__timeout)
             #wait for data/timeout
             elif(time_til_heartbeat <= datetime.datetime.now()):
-                self.__connection[ID].send(self.__current_state[ID][0])
-                data = self.__current_state[ID][0].recv(1)
+                print("send")
+                self.__connections[ID][0].send(self.__current_state[ID][0])
+                data = self.__connections[ID][0].recv(1)
                 if(len(data) == 0):
                     #o sensor foi desconectado, precisa avisar o cliente
                     self.close_socket(ID)
@@ -143,9 +141,12 @@ class HUB:
 
 if __name__ == '__main__':
     hub = HUB()
+    hub.handshake()
+    """
     try:
         hub.handshake()
     except Exception as e:
-        print(e)
+        print('erro',e)
     finally:
         hub.cleanup()
+    """
