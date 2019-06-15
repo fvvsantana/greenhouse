@@ -4,6 +4,7 @@ import random
 import struct
 import time
 import datetime
+import threading
 
 def is_sensor(ID):
     if(ID[0] == '0'):
@@ -83,21 +84,24 @@ class HUB:
                 self.__connections[ID][0], _ = self.__connections[ID][0].accept()
                 #inicia uma thread, que vai receber ou enviar os dados
                 if(is_sensor(ID)):
-                    self.get_data_from_sensor(ID)
                     self.__last_values[ID] = -1
+                    self.__threads.append(threading.Thread(target = self.get_data_from_sensor, args=(ID,len(self.__threads))))
+                    self.__threads[-1].start()
                 elif(is_client(ID)):
                     self.interact_with_client(ID)
                 elif(is_actuator(ID)):
                     self.__current_state[ID] = [b'\x00',b'\x00']
-                    self.send_data_to_sensor(ID)
+                    self.__threads.append(threading.Thread(target = self.send_data_to_sensor, args=(ID,len(self.__threads))))
+                    self.__threads[-1].start()
     
-    def get_data_from_sensor(self, ID):
+    def get_data_from_sensor(self, ID, thread_index):
         while(1):
             data = self.__connections[ID][0].recv(4) #4 bytes que serao interpretados como um float
             if(len(data)):
                 data = struct.unpack('f',data)
                 self.__last_values[ID] = data
             else:
+                del self.__threads[thread_index]
                 break
 
     def interact_with_client(self,ID):
@@ -105,7 +109,7 @@ class HUB:
             request = self.__connections[ID][0].recv(1) #pacote do tipo 2
 
 
-    def send_data_to_sensor(self, ID):
+    def send_data_to_sensor(self, ID, thread_index):
         time_til_heartbeat = datetime.datetime.now() + datetime.timedelta(seconds = self.__timeout)
         while(1):
             #check if a new command should be issued
@@ -116,6 +120,7 @@ class HUB:
                 if(len(data) == 0):
                     #o sensor foi desconectado, precisa avisar o cliente
                     self.close_socket(ID)
+                    del self.__threads[thread_index]
                 elif(data != b'\x00'):
                     #aconteceu um erro precisa mandar para o cliente
                     pass
@@ -130,12 +135,14 @@ class HUB:
                 if(len(data) == 0):
                     #o sensor foi desconectado, precisa avisar o cliente
                     self.close_socket(ID)
+                    del self.__threads[thread_index]
                 elif(data != b'\x00'):
                     #aconteceu um erro precisa mandar para o cliente
                     pass
                 else:
                     #do contrario, tudo certo, calculamos um novo tempo para o heartbeat
                     time_til_heartbeat = datetime.datetime.now() + datetime.timedelta(seconds = self.__timeout)
+            time.sleep(0.1)
 
 
 
