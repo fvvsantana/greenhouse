@@ -52,6 +52,7 @@ class HUB:
         soc,port = self.__connections[ID]
         self.__used_ports.remove(port)
         soc.close()
+        del self.__connections[ID]
 
     def create_socket(self, ID, port):
         self.__connections[ID] = [socket.socket(socket.AF_INET, socket.SOCK_STREAM),port]
@@ -88,7 +89,8 @@ class HUB:
                     self.__threads.append(threading.Thread(target = self.get_data_from_sensor, args=(ID,len(self.__threads))))
                     self.__threads[-1].start()
                 elif(is_client(ID)):
-                    self.interact_with_client(ID)
+                    self.__threads.append(threading.Thread(target = self.interact_with_client, args=(ID,len(self.__threads))))
+                    self.__threads[-1].start()
                 elif(is_actuator(ID)):
                     self.__current_state[ID] = [b'\x00',b'\x00']
                     self.__threads.append(threading.Thread(target = self.send_data_to_sensor, args=(ID,len(self.__threads))))
@@ -102,12 +104,50 @@ class HUB:
                 self.__last_values[ID] = data
             else:
                 del self.__threads[thread_index]
+                self.close_socket(ID)
                 break
 
-    def interact_with_client(self,ID):
+    def interact_with_client(self,ID,thread_index):
         while(1):
             request = self.__connections[ID][0].recv(1) #pacote do tipo 2
-
+            if(len(request) == 0):
+                self.close_socket(ID)
+                del self.__threads[thread_index]
+            elif(request == b'\x00'):
+                #so mandado para a conexao nao morrer
+                to_send = bytes(5)
+                self.__connections[ID][0].sendall(to_send)
+            else:
+                req = int.from_bytes(request, 'big')
+                req = '{0:b}'.format(req)
+                if(req[0] == '0'):
+                    tp = b'\x00'
+                    if(req[3:] == '00000'):
+                        #a media entre sensores foi requisitada
+                        vals = []
+                        for key in self.__last_values:
+                            if(req[:3] == key[:3]):
+                                vals.append(self.__last_values[key])
+                        try:
+                            val = sum(vals)/len(vals)
+                        except:
+                            val = 0.0
+                            tp = b'\x01'
+                    else:
+                        try:
+                            val = self.__last_values[req]
+                        except:
+                            val = 0.0
+                            tp = b'\x01'
+                else:
+                    try:
+                        val = self.__current_state[req][0]
+                        tp = b'\x00'
+                    except:
+                        val = 0.0
+                        tp = b'\x01'
+                to_send = tp + struct.pack('f',val)
+                self.__connections[ID][0].sendall(to_send)
 
     def send_data_to_sensor(self, ID, thread_index):
         time_til_heartbeat = datetime.datetime.now() + datetime.timedelta(seconds = self.__timeout)
@@ -121,28 +161,35 @@ class HUB:
                     #o sensor foi desconectado, precisa avisar o cliente
                     self.close_socket(ID)
                     del self.__threads[thread_index]
+                    break
                 elif(data != b'\x00'):
                     #aconteceu um erro precisa mandar para o cliente
-                    pass
+                    self.close_socket(ID)
+                    del self.__threads[thread_index]
+                    break
                 else:
                     #do contrario, tudo certo, calculamos um novo momento para manter a conexao viva
                     time_til_heartbeat = datetime.datetime.now() + datetime.timedelta(seconds = self.__timeout)
             #wait for data/timeout
             elif(time_til_heartbeat <= datetime.datetime.now()):
-                print("send")
                 self.__connections[ID][0].send(self.__current_state[ID][0])
                 data = self.__connections[ID][0].recv(1)
                 if(len(data) == 0):
                     #o sensor foi desconectado, precisa avisar o cliente
                     self.close_socket(ID)
                     del self.__threads[thread_index]
+                    self.close_socket(ID)
+                    break
                 elif(data != b'\x00'):
                     #aconteceu um erro precisa mandar para o cliente
-                    pass
+                    self.close_socket(ID)
+                    del self.__threads[thread_index]
+                    self.close_socket(ID)
+                    break
                 else:
                     #do contrario, tudo certo, calculamos um novo tempo para o heartbeat
                     time_til_heartbeat = datetime.datetime.now() + datetime.timedelta(seconds = self.__timeout)
-            time.sleep(0.1)
+            time.sleep(0.3)
 
 
 
