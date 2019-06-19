@@ -28,10 +28,42 @@ class Sensor:
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect(('127.0.255.1',new_port))
+        if (self.type == 1): #temp
+                self.__threads.append(threading.Thread(target = self.send_loop_temp, args=(len(self.__threads))))
+                self.__threads[-1].start()
+        elif (self.type == 2): # umid
+                self.__threads.append(threading.Thread(target = self.send_loop_temp, args=(len(self.__threads))))
+                self.__threads[-1].start()
+        elif (self.type == 3): # coo
+                self.__threads.append(threading.Thread(target = self.send_loop_temp, args=(len(self.__threads))))
+                self.__threads[-1].start()
     
     def send(self, value):
         bytes_to_send = struct.pack("f", value)
         self.send(bytes_to_send)
+        
+
+    def send_loop_co2(self, thread_index):
+        inc = 0
+        while (1):
+            self.send((sin(inc)+1)*0.5)
+            sleep(1.0)
+    
+    def send_loop_um(self, thread_index):
+        inc = 0
+        while (1):
+            self.send((sin(inc)+1) * 50)
+            sleep(1.0)
+    
+    def send_loop_temp(self, thread_index):
+        inc = 0
+        while (1):
+            self.send(((sin(inc)+1) * 20)+5)
+            sleep(1.0)
+    
+    
+
+    
         
     def close(self):
         self.sock.close()
