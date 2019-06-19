@@ -64,12 +64,12 @@ class Actuator:
         self.connect()
         while 1:
             message = self.sock.recv(2)
-            if len(stateShifter) == 2:
+            if len(message) == 2:
                 data = message[0] << 8 | message[1]
                 if data != 0:
                     self.state =  not self.state
                 self.sock.send(bytes([255]))
-            elif len(stateShifter) == 1:
+            elif len(message) == 1:
                 data = message[0]
                 if data != 0:
                     self.state = not self.state
