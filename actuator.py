@@ -70,7 +70,6 @@ class Actuator:
             #     if data != 0:
             #         self.state =  not self.state
             #     self.sock.send(bytes([255]))
-            print(message)
 
             if len(message) == 1:
                 data = message[0]
