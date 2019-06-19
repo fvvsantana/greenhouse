@@ -4,17 +4,19 @@ import time
 
 import hub
 import client
-import actuador
+import actuator
 
 h = hub.HUB()
 cl = client.Client(0,0)
-atuador = [actuador.Actuator(4,1), actuador.Actuator(5,1), actuador.Actuator(6,1), actuador.Actuator(7,1)]
+atuador = [actuator.Actuator(4,1), actuator.Actuator(5,1), actuator.Actuator(6,1), actuator.Actuator(7,1)]
 
 processes = [mp.Process(target = h.handshake,args = ())]
-processes[-1].start()
-time.sleep(0.1)
-for p in processes[1:]:
-    p.start()
+processes[0].start()
+time.sleep(0.5)
+#sensores
+for a in atuador:
+    processes.append(mp.Process(target = a.stateShifter, args = ()))
+    processes[-1].start()
 try:
     cl.connect()
 

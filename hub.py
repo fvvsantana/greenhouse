@@ -23,7 +23,7 @@ class HUB:
         self.__host = '127.0.255.1'
         self.__handshake_socket.bind((self.__host,1337))
         self.__timeout = timeout
-        socket.setdefaulttimeout(timeout)
+        #socket.setdefaulttimeout(timeout)
         self.__connections = {} #hashtable de conexoes e portas para cada componente
         #as coneccoes serao armazenadas como uma tupla (socket,port), para evitar que a mesma porta seja reutilizada
         self.__used_ports = []
@@ -100,6 +100,7 @@ class HUB:
         while(1):
             data = self.__connections[ID][0].recv(4) #4 bytes que serao interpretados como um float
             if(len(data)):
+                self.__connections[ID][0].settimeout(self.__timeout)
                 data = struct.unpack('f',data)
                 self.__last_values[ID] = data
             else:
@@ -159,11 +160,13 @@ class HUB:
                 data = self.__connections[ID][0].recv(1)
                 if(len(data) == 0):
                     #o sensor foi desconectado, precisa avisar o cliente
+                    print('a')
                     self.close_socket(ID)
                     del self.__threads[thread_index]
                     break
                 elif(data != b'\x00'):
                     #aconteceu um erro precisa mandar para o cliente
+                    print('b')
                     self.close_socket(ID)
                     del self.__threads[thread_index]
                     break
@@ -178,13 +181,11 @@ class HUB:
                     #o sensor foi desconectado, precisa avisar o cliente
                     self.close_socket(ID)
                     del self.__threads[thread_index]
-                    self.close_socket(ID)
                     break
                 elif(data != b'\x00'):
                     #aconteceu um erro precisa mandar para o cliente
                     self.close_socket(ID)
                     del self.__threads[thread_index]
-                    self.close_socket(ID)
                     break
                 else:
                     #do contrario, tudo certo, calculamos um novo tempo para o heartbeat

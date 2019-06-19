@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import numpy as np
 import socket
 
@@ -20,11 +21,11 @@ Véi, foca no código
 '''
 
 class Actuator:
-    def _init_ (self, type, serialNumber):
+    def __init__ (self, type, serialNumber):
         self.__sock = None
         self.__port = 1337
         self.__addr = '127.0.255.1'
-        self.__socket = socket.socket(socket.AF_NET, socket.SOCK_STREAM)
+        #self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         self.state = False
         self.type = type
@@ -45,9 +46,8 @@ class Actuator:
     '''
     def connect(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as soc:
-            soc.bind((self.__addr, self.__port))
             soc.connect((self.__addr, self.__port))
-            soc.send(bytes([self.ID]))
+            soc.send(bytes([self.__ID]))
             auxPort = soc.recv(2)
             if len(auxPort) != 2:
                 soc.send(bytes([0]))
@@ -57,7 +57,6 @@ class Actuator:
                 newPort = auxPort[0] << 8 | auxPort[1]
                 soc.send(bytes([255]))
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.bind((self.__addr,  newPort))
         self.sock.connect((self.__addr, newPort))
 
     def stateShifter(self):
@@ -71,17 +70,20 @@ class Actuator:
             #     if data != 0:
             #         self.state =  not self.state
             #     self.sock.send(bytes([255]))
+            print(message)
 
             if len(message) == 1:
                 data = message[0]
                 #caso data seja 1, troca o estado. caso seja 0, mantem o estado atual do atuador.
-                if data != 0:
-                    self.state = not self.state
-                #o atuador responde com um ACK (1111 1111)
-                self.sock.send(bytes([255]))
+                if data == b'\x00':
+                    self.state = False
+                else:
+                    self.state = True
+                self.sock.send(bytes([0]))
             #se o pacote for de tamanho diferente de 1 byte, o tamanho do pacote eh invalido
             else:
-                #responde com um pacote tipo 2, indicando ERRO (0000 0000)
-                self.sock.send(bytes([0]))
+                self.sock.send(bytes([255]))
                 self.sock.close()
                 raise AttributeException("ERROR: Invalid size of package received at actuator")
+
+
