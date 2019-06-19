@@ -1,4 +1,12 @@
+import struct
 import socket
+from enum import Enum
+
+#class DeviceCode(Enum):
+
+
+
+
 
 class Client:
 
@@ -46,6 +54,43 @@ class Client:
 				soc.send(bytes([255]))
 
 		#cria uma nova conexao na nova porta
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((self.__addr, newPort))
+        self.__soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.__soc.connect((self.__addr, newPort))
 
+
+    def requestData(type, serialNumber):
+    	#print('Request data')
+    	self.__soc.send(bytes([type << 5 | serialNumber]))
+
+    def receiveData()
+    	#pega os 5 bytes de tipo e dados
+    	data = self.__soc.recv(5)
+    	#pega o tipo e o tira da lista
+    	type = int.from_bytes(data.pop(0))
+
+    	#checa se eh uma mensagem de dado ou de erro
+    	if type == 0: #se for dado
+    		#converte os dados para float
+    		data = struct.unpack('f', data)
+    		#imprime os dados
+    		print('Data: %f' % data)
+
+	    else: #se for erro
+	    	print('Erro de comunicação:\n\tComponente: %b\n\tCódigo: %b\n' % data[-1], data[-2])
+
+
+
+if __name__ == '__main__':
+	#inicia cliente
+	client = Client(0, 0)
+	#faz handshake
+	client.connect()
+	#pede dado ao termometro 1
+	client.requestData(1, 1)
+	#pega dado do termometro 1
+	client.receiveData()
+
+
+
+#converte os 5 bytes em 5 ints
+#data = [ord(i) for i in data]
