@@ -61,20 +61,27 @@ class Actuator:
         self.sock.connect((self.__addr, newPort))
 
     def stateShifter(self):
+        #primeiro ele se connect com o hub
         self.connect()
         while 1:
-            message = self.sock.recv(2)
-            if len(message) == 2:
-                data = message[0] << 8 | message[1]
-                if data != 0:
-                    self.state =  not self.state
-                self.sock.send(bytes([255]))
-            elif len(message) == 1:
+            message = self.sock.recv(1)
+
+            # if len(message) == 2:
+            #     data = message[0] << 8 | message[1]
+            #     if data != 0:
+            #         self.state =  not self.state
+            #     self.sock.send(bytes([255]))
+
+            if len(message) == 1:
                 data = message[0]
+                #caso data seja 1, troca o estado. caso seja 0, mantem o estado atual do atuador.
                 if data != 0:
                     self.state = not self.state
+                #o atuador responde com um ACK (1111 1111)
                 self.sock.send(bytes([255]))
+            #se o pacote for de tamanho diferente de 1 byte, o tamanho do pacote eh invalido
             else:
+                #responde com um pacote tipo 2, indicando ERRO (0000 0000)
                 self.sock.send(bytes([0]))
                 self.sock.close()
                 raise AttributeException("ERROR: Invalid size of package received at actuator")
