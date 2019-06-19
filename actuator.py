@@ -26,6 +26,7 @@ class Actuator:
         self.__addr = '127.0.255.1'
         self.__socket = socket.socket(socket.AF_NET, socket.SOCK_STREAM)
 
+        self.state = False
         self.type = type
         self.serialNumber = serialNumber
 
@@ -59,4 +60,21 @@ class Actuator:
         self.sock.bind((self.__addr,  newPort))
         self.sock.connect((self.__addr, newPort))
 
-    
+    def stateShifter(self):
+        self.connect(self)
+        while 1:
+            message = self.sock.recv(2)
+            if len(stateShifter) == 2:
+                data = message[0] << 8 | message[1]
+                if data != 0:
+                    self.state = !self.state
+                self.sock.send(bytes([255]))
+            elif len(stateShifter) == 1:
+                data = message[0]
+                if data != 0:
+                    self.state = !self.state
+                self.sock.send(bytes([255]))
+            else:
+                self.sock.send(bytes([0]))
+                self.sock.close()
+                raise AttributeException("ERROR: Invalid size of package received at actuator")
