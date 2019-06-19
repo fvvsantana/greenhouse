@@ -4,8 +4,9 @@ from math import pi
 
 class Sensor:
     def __init__(self, type, serialNumber):
+        sensor_type = int.from_bytes(type, "big")
         self.sock = None
-        if (type > 0 and type < 4):
+        if (sensor_type > 0 and sensor_type < 4):
             if (serialNumber >= 0 and serialNumber < 32):
                 self.serial = type<<5 | serialNumber
             else:
@@ -47,19 +48,19 @@ class Sensor:
     def send_loop_co2(self, thread_index):
         inc = 0
         while (1):
-            self.send((sin(inc)+1)*0.5)
+            self.send((sin((inc*pi)/180.0)+1)*0.5)
             sleep(1.0)
     
     def send_loop_um(self, thread_index):
         inc = 0
         while (1):
-            self.send((sin(inc)+1) * 50)
+            self.send((sin((inc*pi)/180.0)+1) * 50)
             sleep(1.0)
     
     def send_loop_temp(self, thread_index):
         inc = 0
         while (1):
-            self.send(((sin(inc)+1) * 20)+5)
+            self.send(((sin((inc*pi)/180.0)+1) * 20)+5)
             sleep(1.0)
         
         
