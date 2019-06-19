@@ -17,7 +17,7 @@ class Sensor:
         self.__handshake()
     
     def __handshake(self):
-        new_port = 0;
+        new_port = 0
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as soc:
             soc.connect(('127.0.255.1',1337))
             soc.send(bytes([self.serial]))
