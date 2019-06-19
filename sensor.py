@@ -1,5 +1,6 @@
 import socket
 import struct
+from math import pi
 
 class Sensor:
     def __init__(self, type, serialNumber):
@@ -24,7 +25,7 @@ class Sensor:
                 raise AttributeException("ERROR: Connection error")
             else:
                 new_port = aux_port[0]<<8 | aux_port[1]
-            soc.send(bytes([170]))    
+            soc.send(bytes([0]))    
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect(('127.0.255.1',new_port))
@@ -60,10 +61,7 @@ class Sensor:
         while (1):
             self.send(((sin(inc)+1) * 20)+5)
             sleep(1.0)
-    
-    
-
-    
+        
         
     def close(self):
         self.sock.close()
