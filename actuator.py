@@ -1,7 +1,7 @@
 import numpy as np
 import socket
 
-"""
+'''
 Véi, foca no código
 
 
@@ -17,7 +17,7 @@ Véi, foca no código
 `-----' `""""`'-----``"""`  \  \_/
                              `-`
 
-""""""
+'''
 
 class Actuator:
     def _init_ (self, type, serialNumber):
