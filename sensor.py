@@ -4,8 +4,8 @@ import struct
 class Sensor:
     def __init__(self, type, serialNumber):
         self.sock = None
-        if (type > 0 && type < 4):
-            if (serialNumber >= 0 && serialNumber < 32):
+        if (type > 0 and type < 4):
+            if (serialNumber >= 0 and serialNumber < 32):
                 self.serial = type<<5 | serialNumber
             else:
                 raise AttributeException("ERROR: Invalid serial number")
@@ -24,7 +24,8 @@ class Sensor:
                 raise AttributeException("ERROR: Connection error")
             else:
                 new_port = aux_port[0]<<8 | aux_port[1]
-            
+            soc.send(bytes([170]))    
+
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect(('127.0.255.1',new_port))
     
@@ -34,3 +35,5 @@ class Sensor:
         
     def close(self):
         self.sock.close()
+
+Sensor(1, 0)
