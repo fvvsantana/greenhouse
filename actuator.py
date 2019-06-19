@@ -61,18 +61,18 @@ class Actuator:
         self.sock.connect((self.__addr, newPort))
 
     def stateShifter(self):
-        self.connect(self)
+        self.connect()
         while 1:
             message = self.sock.recv(2)
             if len(stateShifter) == 2:
                 data = message[0] << 8 | message[1]
                 if data != 0:
-                    self.state = !self.state
+                    self.state =  not self.state
                 self.sock.send(bytes([255]))
             elif len(stateShifter) == 1:
                 data = message[0]
                 if data != 0:
-                    self.state = !self.state
+                    self.state = not self.state
                 self.sock.send(bytes([255]))
             else:
                 self.sock.send(bytes([0]))
