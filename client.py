@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import struct
 import socket
 from enum import Enum
@@ -11,7 +12,6 @@ class ComponentCode(Enum):
     cooler = 5
     irrigator = 6
     co2_injector = 7
-
 
 class Client:
 
