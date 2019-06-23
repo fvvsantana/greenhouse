@@ -38,6 +38,9 @@ for a in atuador:
 #inicia handshake do cliente
 try:
     cl.connect()
+    
+    #colocar esse clear a mais se tiver excecoes aparecendo
+    #os.system('clear')
 
     while(1):
 
