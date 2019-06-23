@@ -190,6 +190,7 @@ class HUB:
                 #fecha a conexao
                 self.close_socket(ID)
                 del self.__threads[thread_index]
+                break
                 #TODO falta um return aqui? pq a thread nao eh pra ser mais executada
             #se o cliente mandou um keep alive
             elif(request == b'\x00'):

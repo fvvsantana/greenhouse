@@ -1,17 +1,7 @@
 #!/usr/bin/python
 import struct
 import socket
-from enum import Enum
-
-class ComponentCode(Enum):
-    client = 0
-    temperature_sensor = 1
-    humidity_sensor = 2
-    co2_sensor = 3
-    heater = 4
-    cooler = 5
-    irrigator = 6
-    co2_injector = 7
+#from main import killProcesses 
 
 class Client:
 
@@ -93,14 +83,23 @@ class Client:
 if __name__ == '__main__':
     #inicia cliente
     client = Client(0, 0)
-    #faz handshake
-    client.connect()
-    #pede dado ao termometro 1
-    client.requestData(1, 1)
-    #pega dado do termometro 1
-    client.receiveData()
 
+    #inicia handshake do cliente
+    try:
+        client.connect()
 
-
-#converte os 5 bytes em 5 ints
-#data = [ord(i) for i in data]
+        while(1):
+            operation = input("enter with q to quit, or the ID of the desired sensor: ")
+            try:
+                ck = int(operation,2)
+            except:
+                ck = None
+            if(not ck): #algo que nao eh um numero binario foi entrado, sai do loop
+                break
+            else:
+                client.requestData(int(operation[:3],2),int(operation[3:],2))
+    except Exception as e:
+        print(e)
+    #finally:
+        #killProcesses()
+    
