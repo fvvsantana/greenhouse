@@ -33,9 +33,9 @@ class HUB:
         self.__timeout = timeout
         #socket.setdefaulttimeout(timeout) #TODO
         #hashtable de conexoes e portas para cada componente
-        #hashtable com chave ID do componente e valor lista de portas
+        #hashtable com chave ID do componente e valor lista com socket e porta
         self.__connections = {} 
-        #as conexoes serao armazenadas como uma tupla (socket, port), para evitar que a mesma porta seja reutilizada
+        #lista de portas usadas para garantir que nao vai usar a mesma porta de outro dispositivo
         self.__used_ports = []
         #ultimos valores que os sensores enviaram
         self.__last_values = {} 
@@ -64,14 +64,27 @@ class HUB:
         return port
 
     def close_socket(self, ID):
+        #se a conexao nao existe
         if(ID not in self.__connections.keys()):
             return
+
+        #pega o socket e a porta
         soc,port = self.__connections[ID]
-        self.__used_ports.remove(port)
+        #remove a porta da lista de portas usadas
+        if port in self.__used_ports:
+            self.__used_ports.remove(port)
+            ''' TODO
+        else:
+            print('ID: ', ID, ' Port: ', port)
+            raise RuntimeError("Tried to delete non-existing port")
+            '''
+
+        #fecha a conexao do socket
         soc.close()
+        #tira a conexao da tabela de conexoes
         del self.__connections[ID]
 
-    #cria um socket, coloca-o numa lista e adiciona na hashtable __connections
+    #associa o ID aa conexao e aa porta. Tudo numa hashtable __connections
     def create_socket(self, ID, port):
         #cria um socket pra porta port, coloca-o numa lista
         # e a coloca como valor da chave ID
@@ -85,40 +98,49 @@ class HUB:
         while True:
             #gera um socket que aceita conexoes
             conn, addr = self.__handshake_socket.accept()
+
             #recebe ID de um componente conectando
             ID = conn.recv(64)
             if len(ID) > 10:
                 raise RuntimeError("Too much data")
                 continue
+            if len(ID) <= 0:
+                print('Nothing read')
+                continue
             #transforma id numa string de bytes que sera usada como chave
             ID = format(int.from_bytes(ID,'big'),'08b')
             #caso uma conexao com esse ID ja exista, ela sera fechada
             self.close_socket(ID)
+
             #inicia uma nova conexao
             #gera nova porta
             new_port = self.gen_new_port()
-            #cria o socket com a porta * 256, para ficar acima de 1024
+            #cria o socket com a porta * 256, para ficar acima de 1024, e associa ao ID
             self.create_socket(ID,new_port*256)
-            #TODO não entendi como connections ja tem a conexao nesse ponto do codigo
+            #configura o socket para ouvir no maximo 1 dispositivo na porta new_port*256
             self.__connections[ID][0].listen(0)
+
             #formata id e manda para o dispositivo que se conectou
-            data_send = bytes([new_port,0])
+            data_send = bytes([new_port,0]) #equivalente a new_port*256
             conn.send(data_send)
+
             #pega o ack do componente
             ack = conn.recv(1)
             #se deu errado, ou seja, eh um nACK
             if(len(ack) == 0 or ack == b'\x00'):
                 #fecha conexao
                 self.close_socket(ID)
+
             else:
-                #passa a aceitar conexoes na nova porta
+                #passa a aceitar conexoes na nova porta (substitui socket por socket ativo)
                 self.__connections[ID][0], _ = self.__connections[ID][0].accept()
+
                 #inicia uma thread, que vai receber ou enviar os dados
                 #se for sensor
                 if(is_sensor(ID)):
                     #ultimo valor lido recebe -1
                     self.__last_values[ID] = -1
-                    #cria uma thread pro sensor
+                    #cria uma thread pro sensor e coloca na lista de threads
                     self.__threads.append(threading.Thread(target = self.get_data_from_sensor, args=(ID,len(self.__threads))))
                     #inicia a thread
                     self.__threads[-1].start()
@@ -139,14 +161,23 @@ class HUB:
     
     def get_data_from_sensor(self, ID, thread_index):
         while(1):
+            #recebe dado do sensor
             data = self.__connections[ID][0].recv(4) #4 bytes que serao interpretados como um float
+            #se a leitura deu certo
             if(len(data)):
+                #seta timeout da proxima operacao 
                 self.__connections[ID][0].settimeout(self.__timeout)
+                #pega o dado como float
                 data = struct.unpack('f',data)
+                #adiciona o dado na lista de ultimos valores dos sensores
                 self.__last_values[ID] = data
+
             else:
+                #tira a thread da lista
                 del self.__threads[thread_index]
+                #fecha a conexao com o sensor, entao ele tera que reabrir conexao
                 self.close_socket(ID)
+                #termina a funcao
                 break
 
     #interacao com o cliente, roda numa thread
