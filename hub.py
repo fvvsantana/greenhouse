@@ -170,7 +170,7 @@ class HUB:
                 #pega o dado como float
                 data = struct.unpack('f',data)
                 #adiciona o dado na lista de ultimos valores dos sensores
-                self.__last_values[ID] = data
+                self.__last_values[ID] = data[0]
 
             else:
                 #tira a thread da lista
@@ -185,11 +185,13 @@ class HUB:
         while(1):
             #pega requisicao
             request = self.__connections[ID][0].recv(1) #pacote do tipo 2
+
             #se deu erro
             if(len(request) == 0):
                 #fecha a conexao
                 self.close_socket(ID)
                 del self.__threads[thread_index]
+                break
                 #TODO falta um return aqui? pq a thread nao eh pra ser mais executada
             #se o cliente mandou um keep alive
             elif(request == b'\x00'):
@@ -198,7 +200,9 @@ class HUB:
                 self.__connections[ID][0].sendall(to_send)
             else:
                 req = int.from_bytes(request, 'big')
-                req = '{0:b}'.format(req)
+                #req = '{0:b}'.format(req)
+                #transforma o int em binario, cria uma string de 8 caracteres, preenche com 0 na esquerda
+                req = format(req, '08b')
                 #se pediu um sensor
                 if(req[0] == '0'):
                     tp = b'\x00'

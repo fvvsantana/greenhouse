@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import os
 import multiprocessing as mp
 import time
 from client import ComponentCode as cc
@@ -39,17 +40,52 @@ try:
     cl.connect()
 
     while(1):
-        op = input("enter with q to quit, or the ID of the desired sensor: ")
-        try:
-            ck = int(op,2)
-        except:
-            ck = None
-        if(not ck): #algo que nao eh um numero binario foi entrado, sai do loop
-            break
+
+        option = input("Digite alguma das opcoes abaixo:\n\
+                    \tt: temperatura\n\
+                    \tu: umidade\n\
+                    \tc: co2\n\n")
+                    #\tm: media\n\n")
+        os.system('clear')
+        valid = True
+        if option == 't':
+            operation = '00100001'
+            print('Temperatura: ', end = '')
+        elif option == 'u':
+            operation = '01000001'
+            print('Umidade: ', end = '')
+        elif option == 'c':
+            operation = '01100001'
+            print('Nivel de CO2: ', end = '')
+            '''
+        elif option == 'm':
+            operation = '00100000'
+            print('Media: ', end = '')
+            '''
         else:
-            cl.requestData(int(op[:3],2),int(op[3:],2))
+            valid = False
+
+        if valid:
+            cl.requestData(int(operation[:3],2),int(operation[3:],2))
+            cl.receiveData()
+        else:
+            print('Invalid option')
+
 except Exception as e:
     print(e)
 finally:
     for p in processes:
         p.kill()
+
+
+        '''
+        try:
+            ck = int(op,2)
+        except:
+            ck = None
+        if(not ck): #algo que nao eh um numero binario foi entrado, sai do loop
+            print('Not valid ID')
+            break
+            '''
+
+

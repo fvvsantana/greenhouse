@@ -64,8 +64,8 @@ class Client:
 
 
     def requestData(self, type, serialNumber):
-        #print('Request data')
-        self.__soc.send(bytes([type << 5 | serialNumber]))
+        to_send = bytes([type << 5 | serialNumber])
+        self.__soc.send(to_send)
 
     def receiveData(self):
         #pega os 5 bytes de tipo e dados
@@ -81,7 +81,7 @@ class Client:
             #converte os dados para float
             data = struct.unpack('f', data)
             #imprime os dados
-            print('Data: %f' % data)
+            print('%f' % data)
 
         else: #se for erro
             print('Erro de comunicação:\n\tComponente: ', data[-1], '\n\tCódigo: ', data[-2], '\n')
