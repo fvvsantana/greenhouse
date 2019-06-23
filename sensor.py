@@ -70,4 +70,3 @@ class Sensor:
     def close(self): # Fecha o conexao
         self.sock.close()
 
-Sensor(1, 0)
