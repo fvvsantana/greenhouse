@@ -6,11 +6,11 @@ from time import sleep
 
 class Sensor:
     def __init__(self, type, serialNumber): # Ao criar o objeto seta o basico das variaveis
-        sensor_type = type
+        #concatena o tipo e o numero serial
         self.type = type
         self.sock = None
-        if (sensor_type > 0 and sensor_type < 4):  # Verifica se os valores são validos
-            if (serialNumber >= 0 and serialNumber < 32):
+        if type > 0 and type < 4:  # Verifica se os valores são validos
+            if serialNumber >= 0 and serialNumber < 32:
                 self.serial = type<<5 | serialNumber
             else:
                 raise AttributeException("ERROR: Invalid serial number")
@@ -39,10 +39,14 @@ class Sensor:
                 threading.Thread(target = self.send_loop_um, args=()).start()
         elif (self.type == 3): # coo
                 threading.Thread(target = self.send_loop_co2, args=()).start()
+
+        #faz com que o processo não morra, assim nao fechando as threads
+        while 1:
+            sleep(10.0)
     
     def send(self, value): # Manda os valores pela conexao ja estabelecida
         bytes_to_send = struct.pack("f", value)
-        self.sock.sendall(bytes_to_send)
+        self.sock.send(bytes_to_send)
         
 
     def send_loop_co2(self): # Loop de gerar os valores do sensor de CO2
@@ -51,7 +55,7 @@ class Sensor:
             self.send((sin((inc*pi)/180.0)+1)*0.5)
             inc += 1
             sleep(1.0)
-    
+
     def send_loop_um(self): # Loop de gerar os valores do sensor de umidade
         inc = 0
         while (1):

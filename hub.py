@@ -186,6 +186,13 @@ class HUB:
             #pega requisicao
             request = self.__connections[ID][0].recv(1) #pacote do tipo 2
 
+            '''
+            print(self.__last_values)
+            print(self.__current_state)
+            print(self.__connections)
+            print(self.__used_ports)
+            '''
+
             #se deu erro
             if(len(request) == 0):
                 #fecha a conexao

@@ -49,7 +49,7 @@ class Client:
             #se a transmissao falhou
             if len(auxPort) != 2:
                 #envia nAck
-                soc.send(bytes([0]))
+                #soc.send(bytes([0]))
                 #fecha conexao
                 soc.close()
                 raise AttributeError("ERROR: Connection error")
